@@ -69,34 +69,52 @@ void compareStrings(char* guess, char* hiddenNumber){
     printf("Well placed pieces: %d\n", rightPlaced);
     printf("Misplaced pieces: %d\n", wrongPlaced);
 }
+char* getInput(){
+    char c;
+    //collects input in the std in
+    char* input =(char*) malloc(sizeof(char) * 4);
+    for(int i=0; i<5; i++){
+        if(read(0, &c, 1) == '\0'){
+            return NULL;
+        }
+        if(i == 4)break;
+        input[i] = c;
+
+    }
+    return input;
+}
 //gives instruction and collects input from the user
-int getInput(char* hidden_number, int round){
-    my_putstr("--------");
+int checkInput(char* hidden_number, int round){
+    char* input =(char*) malloc(sizeof(char) * 4);
+    my_putstr("---");
         char str[12]  = "Round ";
         char ch = round + '0';
         str[strlen(str)] = ch;
         my_putstr(str);
         my_putchar('>');
-        char c;
-        //collects input in the std in
-        char* input =(char*) malloc(sizeof(char) * 4);
-        for(int i=0; i<5; i++){
-            if(read(0, &c, 1) == '\0'){
-                return 1;
-            }
-            if(i == 4)break;
-            input[i] = c;
+        input = getInput();       
+       
+       if (input != NULL) {
+           //does the comparison
+            if(strcmp(input, hidden_number) == 0){
+                my_putstr("Congratz you did it!");
+                return -1;
+            }else if(validateInput(input) == 0){
+                while (validateInput(input) == 0) {
+                    printf("Wrong input!\n");
+                    my_putchar('>');
+                    input = getInput(); 
+                }
 
-        }
-        //does the comparison
-        if(strcmp(input, hidden_number) == 0){
-            printf("Congratz you won!\n");
-            return -1;
-        }else if(validateInput(input) == 0){
-            printf("Wrong input!\n");
-        }else if(validateInput(input) == 1){
-            compareStrings(input, hidden_number);
-        }
+            }else if(validateInput(input) == 1){
+                compareStrings(input, hidden_number);
+            }
+           
+       }else{
+           my_putstr("^D");
+           return 1;
+       }
+        
 
         return 0;
 }
@@ -107,9 +125,6 @@ int main (int numArgs, char* args[]){
     if(numArgs <= 1){
         rounds = 10;
         hidden_number = getRandom();
-    }else if(numArgs == 2){
-        rounds = 10;
-        hidden_number = args[1];
     }else if(numArgs == 3){
         //checks for the right flag for the hidden code
         if (strcmp(args[1], "-c") == 0)  {
@@ -118,6 +133,7 @@ int main (int numArgs, char* args[]){
             
         }else {
             printf("invalid flag, expects -c number or -t number of rounds ");
+            return 1;
         }
     //validates when two flags are received for the hidden code and the number of rounds
     }else if(numArgs == 5){
@@ -136,10 +152,11 @@ int main (int numArgs, char* args[]){
          printf("invalid number of arguments");
             return 1;
     }
-    printf("Will you find the secret code?\nPlease enter a valid guess\n\n");
+    my_putstr("Will you find the secret code?");
+    my_putstr("Please enter a valid guess");
     int i = 0;
     while (i < rounds) {
-        int value = getInput(hidden_number, i);
+        int value = checkInput(hidden_number, i);
         if(value == 1){
             return 1;
         }else if(value == -1){
